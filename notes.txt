@@ -1,0 +1,4 @@
+item: title, link, author, count
+
+item_id => keep a count of votes
+item_voters => bloom_filter(user_ids)
