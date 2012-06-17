@@ -1,0 +1,13 @@
+<ul>
+  <%- @stories.each do |story| %>
+    <li>
+      <div class="title">
+        <%= story.votes %>
+        <%= link_to story.title, story.url %>
+      </div>
+      <div class="details">
+        by <%= story.user.handle %>
+        at <%= time_formatter story.created_at %>
+      </div>
+  <%- end -%>
+</ul>
