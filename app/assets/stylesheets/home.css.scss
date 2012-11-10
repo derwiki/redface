@@ -1,0 +1,49 @@
+// Place all the styles related to the Home controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+.clearfix:after {                                                                                                                                                                              
+  clear: both;                                                                  
+  content: ".";                                                                 
+  display: block;                                                               
+  height: 0pt;                                                                  
+  line-height: 0pt;                                                             
+  visibility: hidden;                                                           
+}                                                                               
+html[xmlns] .clearfix {                                                         
+  display:block;                                                                
+}                                                                               
+* html .clearfix {                                                                 
+  height:1%;                                                                       
+}   
+
+#content ul {
+  list-style-type: none;
+  font-family: Helvetica;
+
+  li {
+    padding: 5px;
+
+    a {
+      text-decoration: none;
+    }
+
+    .votes {
+      font-weight: bold;
+      width: 50px;
+      float: left;
+      text-align: center;
+    }
+
+    .title, .details, .photo {
+      margin-left: 50px;
+      display: block;
+    }
+
+    .title {
+      font-size: medium;
+    }
+    .details {
+      font-size: small;
+    }
+  }
+}
