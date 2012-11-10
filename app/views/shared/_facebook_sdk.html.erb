@@ -31,6 +31,7 @@
         complete : function(resp) {
           var respJson = JSON.parse(resp.responseText);
           $('#content').append(respJson.html);
+          debugger;
           importStream(respJson.count == 0);
         }
       });

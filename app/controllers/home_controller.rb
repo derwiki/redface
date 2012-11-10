@@ -23,15 +23,18 @@ class HomeController < ApplicationController
     fbuid        = params['authResponse']['userID']
     url          = "https://graph.facebook.com/me/home?limit=100&access_token=#{access_token}"
     stream       = JSON.parse(get_https(url).body)
+    total        = 0
     ActiveRecord::Base.transaction do
-      import_from_stream(stream, fbuid)
+      total = import_from_stream(stream, fbuid)
     end
-    render text: 'OK'
+    Rails.logger.info "Imported #{total} stories"
+    render text: "OK - #{total}"
   end
 
 private
 
   def import_from_stream(resp, fbuid)
+    total = 0
     created_ats = Story.where(importer_id: fbuid).pluck(:created_at) # for de-duping
     unknown_types = []
     resp.fetch('data', []).each do |story_json|
@@ -55,7 +58,9 @@ private
       else
         unknown_types << status_type
       end
-      title.gsub! /\n/, ' ' if title
+      return unless title
+      title.gsub! /\n/, ' '
+      title = title[0..255]
 
       puts [votes, title, user_name, created_at].join(' : ')
       email = "#{user_name.gsub(/ /, '_')}@example.com"
@@ -63,7 +68,9 @@ private
       story = Story.create! title: title, votes: votes, url: url || picture,
                             user_id: user.id, created_at: created_at,
                             importer_id: fbuid
+      total += 1
     end
+    total
   end
 
   def ranking_score(act, exp=1.5)
