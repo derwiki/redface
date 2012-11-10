@@ -38,13 +38,14 @@
     }
 
     function importStream(refresh) {
+      console.log('enter importStream');
       $.ajax({
         url      : '/import',
         data     : Redface.loginResponse,
         dataType : 'json',
         complete  : function(resp) {
           console.log("finished importStream");
-          if (refresh) { location.reload(); }
+          // if (refresh) { location.reload(); }
         }
       });
     }
