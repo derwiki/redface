@@ -6,16 +6,21 @@ class HomeController < ApplicationController
   end
 
   def stories
-    story_ids = ranked_ids_for_pulse
     fbuid = params[:fbuid].to_i
+    Rails.logger.info "fbuid: #{fbuid}"
+    story_ids = ranked_ids_for_pulse(importer_id: fbuid)
+    Rails.logger.info "story_ids: #{story_ids}"
     stories = Story.where(id: story_ids, importer_id: fbuid).
                     includes(:user).
                     sort_by { |s| story_ids.index(s.id) }
-    render json: {
+    json = {
       count: stories.count,
       html: render_to_string(partial: 'shared/list', layout: false,
                              locals: { stories: stories })
     }
+    Rails.logger.info "Response: #{json}"
+    puts json
+    render json: json
   end
 
   def import
@@ -58,14 +63,16 @@ private
       else
         unknown_types << status_type
       end
-      return unless title
+      next unless title
       title.gsub! /\n/, ' '
-      title = title[0..255]
+      title = title[0..254]
+      url = url || picture || "http://www.example.com"
+      url = url[0..254]
 
-      puts [votes, title, user_name, created_at].join(' : ')
+      Rails.logger.info [votes, title, user_name, created_at].join(' : ')
       email = "#{user_name.gsub(/ /, '_')}@example.com"
       user = User.create! handle: user_name, email: email
-      story = Story.create! title: title, votes: votes, url: url || picture,
+      story = Story.create! title: title, votes: votes, url: url,
                             user_id: user.id, created_at: created_at,
                             importer_id: fbuid
       total += 1
@@ -86,6 +93,7 @@ private
     limit = (opts[:limit] || 20).to_i
     acts = Story.select('id, created_at, votes').
                  where('votes > 0').
+                 where(importer_id: opts[:importer_id]).
                  order('id DESC').limit(1000)
     page = acts.sort_by {|act| -ranking_score(act, exp)}.slice(offset, limit)
     Array(page).map(&:id)

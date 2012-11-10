@@ -31,7 +31,7 @@
         complete : function(resp) {
           var respJson = JSON.parse(resp.responseText);
           $('#content').append(respJson.html);
-          debugger;
+          // only refresh if the page is empty
           importStream(respJson.count == 0);
         }
       });
@@ -44,7 +44,6 @@
         dataType : 'json',
         complete  : function(resp) {
           console.log("finished importStream");
-          if (refresh) { location.reload(); }
         }
       });
     }
