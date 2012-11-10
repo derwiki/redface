@@ -37,10 +37,7 @@ class HomeController < ApplicationController
     stream = JSON.parse(get_https(url).body)
     #File.open('/tmp/redface_response.json', 'w+') { |f| f.write(stream) }
     #stream = JSON.parse(File.read('/tmp/redface_import.json'))
-    total  = 0
-    ActiveRecord::Base.transaction do
-      total = import_from_stream(stream, fbuid)
-    end
+    total = import_from_stream(stream, fbuid)
     Rails.logger.info "Imported #{total} stories"
     render text: "OK - #{total}"
   end
@@ -82,11 +79,15 @@ private
       url   = (link || picture || "http://www.example.com")[0..254]
 
       Rails.logger.info [votes, title, user_name, created_at].join(' : ')
-      user = User.create! handle: user_name, email: user_fbuid
-      story = Story.create! title: title, votes: votes, url: url,
-                            user_id: user.id, created_at: created_at,
-                            importer_id: fbuid, photo_url: picture
-      total += 1
+      begin
+        user = User.create! handle: user_name, email: user_fbuid
+        story = Story.create! title: title, votes: votes, url: url,
+                              user_id: user.id, created_at: created_at,
+                              importer_id: fbuid, photo_url: picture
+        total += 1
+      rescue ActiveRecord::StatementInvalid => e
+        Rails.logger.error e
+      end
     end
     total
   end
