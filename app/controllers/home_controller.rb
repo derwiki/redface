@@ -25,10 +25,19 @@ class HomeController < ApplicationController
 
   def import
     access_token = params['authResponse']['accessToken']
-    fbuid        = params['authResponse']['userID']
-    url          = "https://graph.facebook.com/me/home?limit=100&access_token=#{access_token}"
-    stream       = JSON.parse(get_https(url).body)
-    total        = 0
+    fbuid        = params['authResponse']['userID'].to_i
+    story        = Story.where(importer_id: fbuid).last
+    if story && story.created_at < 30.minutes.ago
+      Rails.logger.info "Not importing, found story #{story.id} from #{story.created_at}"
+      render text: "OK - Cached"
+      return
+    end
+
+    url    = "https://graph.facebook.com/me/home?limit=200&access_token=#{access_token}"
+    stream = JSON.parse(get_https(url).body)
+    #File.open('/tmp/redface_response.json', 'w+') { |f| f.write(stream) }
+    #stream = JSON.parse(File.read('/tmp/redface_import.json'))
+    total  = 0
     ActiveRecord::Base.transaction do
       total = import_from_stream(stream, fbuid)
     end
@@ -49,32 +58,34 @@ private
       # return if we already have this timestamp recorded
 
       user_name   = story_json['from']['name']
+      user_fbuid  = story_json['from']['id']
       status_type = story_json['status_type']
+      fbid = story_json['id']
 
-      if %w(approved_friend app_created_story added_photos).include? status_type
+      if status_type == 'app_created_story' && story_json['application']['name'] == 'Spotify'
+        next
+      elsif %w(approved_friend added_photos).include? status_type
         next # skip stories we don't want to show
-      elsif %w(message mobile_status_update shared_story wall_post).include? status_type
-        title = story_json['message']
-        votes = story_json['likes'] ? story_json['likes']['count'] : 0
-      elsif status_type == 'link'
-        title   = story_json['name']
-        url     = story_json['link']
+      elsif %w(app_created_story message mobile_status_update shared_story wall_post).include? status_type
+        title   = story_json['message']
+        votes   = story_json['likes'] ? story_json['likes']['count'] : 0
+        link    = story_json['link'] || story_json['actions'][0]['link']
         picture = story_json['picture']
       else
         unknown_types << status_type
       end
-      next unless title
-      title.gsub! /\n/, ' '
-      title = title[0..254]
-      url = url || picture || "http://www.example.com"
-      url = url[0..254]
+      unless title
+        Rails.logger.info status_type
+        next
+      end
+      title = title.gsub(/\n/, ' ')[0..254]
+      url   = (link || picture || "http://www.example.com")[0..254]
 
       Rails.logger.info [votes, title, user_name, created_at].join(' : ')
-      email = "#{user_name.gsub(/ /, '_')}@example.com"
-      user = User.create! handle: user_name, email: email
+      user = User.create! handle: user_name, email: user_fbuid
       story = Story.create! title: title, votes: votes, url: url,
                             user_id: user.id, created_at: created_at,
-                            importer_id: fbuid
+                            importer_id: fbuid, photo_url: picture
       total += 1
     end
     total

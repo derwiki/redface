@@ -44,6 +44,7 @@
         dataType : 'json',
         complete  : function(resp) {
           console.log("finished importStream");
+          if (refresh) { location.reload(); }
         }
       });
     }
