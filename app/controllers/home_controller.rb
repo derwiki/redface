@@ -1,27 +1,46 @@
+require 'net/https'
+require 'uri'
+
 class HomeController < ApplicationController
   def index
+  end
+
+  def stories
     story_ids = ranked_ids_for_pulse
-    @stories = Story.where(id: story_ids).sort_by { |s| story_ids.index(s.id) }
+    fbuid = params[:fbuid].to_i
+    stories = Story.where(id: story_ids, importer_id: fbuid).
+                    includes(:user).
+                    sort_by { |s| story_ids.index(s.id) }
+    render json: {
+      count: stories.count,
+      html: render_to_string(partial: 'shared/list', layout: false,
+                             locals: { stories: stories })
+    }
   end
 
   def import
     access_token = params['authResponse']['accessToken']
-    url = "https://graph.facebook.com/me/home?limit=500&access_token=#{access_token}"
-    Rails.logger.info "eyecatcher: #{url}"
-    stream = JSON.parse(`curl #{url}`)
-    Rails.logger.info "eyecatcher: #{stream}"
-    import_from_stream(stream)
+    fbuid        = params['authResponse']['userID']
+    url          = "https://graph.facebook.com/me/home?limit=100&access_token=#{access_token}"
+    stream       = JSON.parse(get_https(url).body)
+    ActiveRecord::Base.transaction do
+      import_from_stream(stream, fbuid)
+    end
     render text: 'OK'
   end
 
 private
 
-  def import_from_stream(newsfeed)
+  def import_from_stream(resp, fbuid)
+    created_ats = Story.where(importer_id: fbuid).pluck(:created_at) # for de-duping
     unknown_types = []
-    newsfeed.fetch('data', []).each do |story_json|
+    resp.fetch('data', []).each do |story_json|
       # all stories have these attributes
-      created_at = Time.zone.parse(story_json['created_time'])
-      user_name = story_json['from']['name']
+      created_at  = Time.zone.parse(story_json['created_time'])
+      next if created_ats.include?(created_at)
+      # return if we already have this timestamp recorded
+
+      user_name   = story_json['from']['name']
       status_type = story_json['status_type']
 
       if %w(approved_friend app_created_story added_photos).include? status_type
@@ -42,7 +61,8 @@ private
       email = "#{user_name.gsub(/ /, '_')}@example.com"
       user = User.create! handle: user_name, email: email
       story = Story.create! title: title, votes: votes, url: url || picture,
-                            user_id: user.id, created_at: created_at
+                            user_id: user.id, created_at: created_at,
+                            importer_id: fbuid
     end
   end
 
@@ -62,5 +82,16 @@ private
                  order('id DESC').limit(1000)
     page = acts.sort_by {|act| -ranking_score(act, exp)}.slice(offset, limit)
     Array(page).map(&:id)
+  end
+
+  def get_https(url)
+    uri = URI.parse(url)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+    req = Net::HTTP::Get.new(uri.request_uri)
+
+    http.request(req)
   end
 end

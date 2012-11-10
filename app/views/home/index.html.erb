@@ -1,16 +1,5 @@
 <div id="fb-login-wrapper">
   <fb:login-button>Login with Facebook</fb:login-button>
 </div>
-<ul>
-  <%- @stories.each do |story| %>
-    <li>
-      <div class="title">
-        <%= story.votes %>
-        <%= link_to story.title, story.url %>
-      </div>
-      <div class="details">
-        by <%= story.user.handle %>
-        at <%= time_ago_in_words story.created_at %> ago
-      </div>
-  <%- end -%>
-</ul>
+<div id="content">
+</div>

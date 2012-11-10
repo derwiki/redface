@@ -7,6 +7,7 @@ RedditClone::Application.routes.draw do
   # Keep in mind you can assign values other than :controller and :action
   match 'vote/new' => 'vote#new'
   match 'import' => 'home#import'
+  match 'stories' => 'home#stories'
 
   # Sample of named route:
   #   match 'products/:id/purchase' => 'catalog#purchase', :as => :purchase

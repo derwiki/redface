@@ -15,7 +15,8 @@
     FB.login(function(response) {
       if (response.authResponse) {
         Redface.loginResponse = response;
-        console.log('Success!', response);
+        Redface.viewerFbuid = response.authResponse.userID;
+        $('#fb-login-wrapper').hide();
         loadStream();
       } else {
         console.log('There was a problem: ', response);
@@ -23,12 +24,27 @@
     }, {scope: 'read_stream'});
 
     function loadStream() {
-      FB.api('/me/home', function(r) {
-        $.ajax({
-          url: '/import', 
-          data: Redface.loginResponse,
-          dataType: 'json'
-        });
+      console.log('enter loadStream');
+      $.ajax({
+        url : '/stories?fbuid=' + Redface.viewerFbuid,
+        dataType : 'json',
+        complete : function(resp) {
+          var respJson = JSON.parse(resp.responseText);
+          $('#content').append(respJson.html);
+          importStream(respJson.count == 0);
+        }
+      });
+    }
+
+    function importStream(refresh) {
+      $.ajax({
+        url      : '/import',
+        data     : Redface.loginResponse,
+        dataType : 'json',
+        complete  : function(resp) {
+          console.log("finished importStream");
+          if (refresh) { location.reload(); }
+        }
       });
     }
   };
