@@ -27,7 +27,7 @@ class HomeController < ApplicationController
     access_token = params['authResponse']['accessToken']
     fbuid        = params['authResponse']['userID'].to_i
     story        = Story.where(importer_id: fbuid).last
-    if story && story.created_at < 30.minutes.ago
+    if story && (Time.now - story.created_at) < 30.minutes
       Rails.logger.info "Not importing, found story #{story.id} from #{story.created_at}"
       render text: "OK - Cached"
       return
