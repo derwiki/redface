@@ -18,8 +18,6 @@ class HomeController < ApplicationController
       html: render_to_string(partial: 'shared/list', layout: false,
                              locals: { stories: stories })
     }
-    Rails.logger.info "Response: #{json}"
-    puts json
     render json: json
   end
 
@@ -57,7 +55,6 @@ private
       status_type = story_json['status_type']
       fbid = story_json['id']
 
-      Rails.logger.info "* #{story_json['application']}"
       application = story_json['application']
       if status_type == 'app_created_story' && application && application['name'] == 'Spotify'
         next
@@ -78,7 +75,6 @@ private
       title = title.gsub(/\n/, ' ')[0..254]
       url   = (link || picture || "http://www.example.com")[0..254]
 
-      Rails.logger.info [votes, title, user_name, created_at].join(' : ')
       begin
         user = User.create! handle: user_name, email: user_fbuid
         story = Story.create! title: title, votes: votes, url: url,
