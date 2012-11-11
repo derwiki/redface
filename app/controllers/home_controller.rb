@@ -24,8 +24,8 @@ class HomeController < ApplicationController
   end
 
   def import
-    access_token = params['authResponse']['accessToken']
-    fbuid        = params['authResponse']['userID'].to_i
+    access_token = params['accessToken']
+    fbuid        = params['userID'].to_i
     story        = Story.where(importer_id: fbuid).last
     if story && (Time.now - story.created_at) < 30.minutes
       Rails.logger.info "Not importing, found story #{story.id} from #{story.created_at}"
@@ -35,11 +35,9 @@ class HomeController < ApplicationController
 
     url    = "https://graph.facebook.com/me/home?limit=200&access_token=#{access_token}"
     stream = JSON.parse(get_https(url).body)
-    #File.open('/tmp/redface_response.json', 'w+') { |f| f.write(stream) }
-    #stream = JSON.parse(File.read('/tmp/redface_import.json'))
     total = import_from_stream(stream, fbuid)
     Rails.logger.info "Imported #{total} stories"
-    render text: "OK - #{total}"
+    render text: total
   end
 
 private
@@ -59,7 +57,9 @@ private
       status_type = story_json['status_type']
       fbid = story_json['id']
 
-      if status_type == 'app_created_story' && story_json['application']['name'] == 'Spotify'
+      Rails.logger.info "* #{story_json['application']}"
+      application = story_json['application']
+      if status_type == 'app_created_story' && application && application['name'] == 'Spotify'
         next
       elsif %w(approved_friend added_photos).include? status_type
         next # skip stories we don't want to show

@@ -11,17 +11,33 @@
     });
 
     var Redface = {};
-
-    FB.login(function(response) {
-      if (response.authResponse) {
-        Redface.loginResponse = response;
-        Redface.viewerFbuid = response.authResponse.userID;
+    function loginFromAuthResponse(authResponse) {
+      if (authResponse && authResponse.accessToken) {
+        console.log('Got valid accessToken');
+        Redface.loginResponse = authResponse;
+        Redface.viewerFbuid = authResponse.userID;
         $('#fb-login-wrapper').hide();
         loadStream();
       } else {
-        console.log('There was a problem: ', response);
+        console.log('no valid accessToken');
       }
-    }, {scope: 'read_stream'});
+    }
+
+    function init() {
+      var authResponse = FB.getAuthResponse();
+      if (authResponse && authResponse.accessToken) {
+        // already logged in with an active token
+        console.log('already logged in');
+        loginFromAuthResponse(authResponse);
+      } else {
+        // not logged in
+        console.log('not logged in');
+        FB.Event.subscribe('auth.authResponseChange', function(response) {
+          loginFromAuthResponse(response.authResponse);
+        });
+      }
+    }
+    init();
 
     function loadStream() {
       console.log('enter loadStream');
@@ -30,7 +46,10 @@
         dataType : 'json',
         complete : function(resp) {
           var respJson = JSON.parse(resp.responseText);
-          $('#content').append(respJson.html);
+          console.log('loadStream resp', resp);
+          if ($('li').length == 0) {
+            $('#content').append(respJson.html);
+          }
           // only refresh if the page is empty
           importStream(respJson.count == 0);
         }
@@ -39,13 +58,16 @@
 
     function importStream(refresh) {
       console.log('enter importStream');
+      console.log('sending data: ', Redface.loginResponse);
       $.ajax({
         url      : '/import',
         data     : Redface.loginResponse,
         dataType : 'json',
         complete  : function(resp) {
-          console.log("finished importStream");
-          if (refresh) { location.reload(); }
+          console.log("finished importStream", resp.responseText);
+          if (refresh && parseInt(resp.responseText, 10) > 0) {
+            location.reload();
+          }
         }
       });
     }
