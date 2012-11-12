@@ -7,7 +7,15 @@ def randw
 end
 
 namespace :playground do
-  desc "Playground for rake tasks"
+  desc 'Membership report'
+  task membership: :environment do
+    Story.pluck(:importer_id).uniq.map do |id|
+      user = JSON.parse(`curl -s http://graph.facebook.com/#{id}`)
+      puts user['name']
+    end
+  end
+
+  desc 'Playground for rake tasks'
   task fill: :environment do
     FUTURAMA_NAMES.each do |name|
       first_name = name.split(' ').first
