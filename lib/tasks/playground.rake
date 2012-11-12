@@ -9,10 +9,13 @@ end
 namespace :playground do
   desc 'Membership report'
   task membership: :environment do
-    Story.pluck(:importer_id).uniq.map do |id|
+    c = Story.pluck(:importer_id).uniq.map do |id|
       user = JSON.parse(`curl -s http://graph.facebook.com/#{id}`)
       puts user['name']
-    end
+    end.size
+
+    puts "Total: #{c}"
+    puts "Total stories: #{Story.count}"
   end
 
   desc 'Playground for rake tasks'
