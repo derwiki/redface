@@ -8,7 +8,7 @@ class HomeController < ApplicationController
   def stories
     fbuid = params[:fbuid].to_i
     Rails.logger.info "fbuid: #{fbuid}"
-    story_ids = ranked_ids_for_pulse(importer_id: fbuid)
+    story_ids = ranked_ids_for_pulse(importer_id: fbuid, exp: params[:exp])
     Rails.logger.info "story_ids: #{story_ids}"
     stories = Story.where(id: story_ids, importer_id: fbuid).
                     includes(:user).
@@ -98,7 +98,7 @@ private
     @now = Time.now.to_i
     exp = opts[:exp].to_f || 1.5
     offset = opts[:offset].to_i
-    limit = (opts[:limit] || 20).to_i
+    limit = (opts[:limit] || 50).to_i
     acts = Story.select('id, created_at, votes').
                  where('votes > 0').
                  where(importer_id: opts[:importer_id]).
