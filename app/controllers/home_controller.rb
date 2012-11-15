@@ -7,18 +7,16 @@ class HomeController < ApplicationController
 
   def stories
     fbuid = params[:fbuid].to_i
-    Rails.logger.info "fbuid: #{fbuid}"
-    story_ids = ranked_ids_for_pulse(importer_id: fbuid, exp: params[:exp])
-    Rails.logger.info "story_ids: #{story_ids}"
-    stories = Story.where(id: story_ids, importer_id: fbuid).
-                    includes(:user).
-                    sort_by { |s| story_ids.index(s.id) }
-    json = {
+    stories = Story.for_importer(fbuid)
+    render json: stories_json(stories)
+  end
+
+  def stories_json(stories)
+    {
       count: stories.count,
       html: render_to_string(partial: 'shared/list', layout: false,
                              locals: { stories: stories })
     }
-    render json: json
   end
 
   def import
@@ -35,7 +33,8 @@ class HomeController < ApplicationController
     stream = JSON.parse(get_https(url).body)
     total = import_from_stream(stream, fbuid)
     Rails.logger.info "Imported #{total} stories"
-    render text: total
+    stories = Story.for_importer(fbuid)
+    render json: stories_json(stories)
   end
 
 private
@@ -86,25 +85,6 @@ private
       end
     end
     total
-  end
-
-  def ranking_score(act, exp=1.5)
-    denom = ((@now - act.created_at.to_i + 1) / 3600.0) ** exp
-    return 0 if denom.zero? || act.votes.nil?
-    return act.votes / denom
-  end
-
-  def ranked_ids_for_pulse(opts={})
-    @now = Time.now.to_i
-    exp = opts[:exp].to_f || 1.5
-    offset = opts[:offset].to_i
-    limit = (opts[:limit] || 50).to_i
-    acts = Story.select('id, created_at, votes').
-                 where('votes > 0').
-                 where(importer_id: opts[:importer_id]).
-                 order('id DESC').limit(1000)
-    page = acts.sort_by {|act| -ranking_score(act, exp)}.slice(offset, limit)
-    Array(page).map(&:id)
   end
 
   def get_https(url)

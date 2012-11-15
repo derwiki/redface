@@ -17,6 +17,7 @@
         Redface.loginResponse = authResponse;
         Redface.viewerFbuid = authResponse.userID;
         $('#fb-login-wrapper').hide();
+        $('#spinner').show();
         loadStream();
       } else {
         console.log('no valid accessToken');
@@ -50,8 +51,12 @@
           if ($('li').length == 0) {
             $('#content').append(respJson.html);
           }
-          // only refresh if the page is empty
-          importStream(respJson.count == 0);
+          if (respJson.count == 0) {
+            // only refresh if the page is empty
+            importStream(true);
+          } else {
+            $('#spinner').hide();
+        }
         }
       });
     }
@@ -64,9 +69,11 @@
         data     : Redface.loginResponse,
         dataType : 'json',
         complete  : function(resp) {
+          var respJson = JSON.parse(resp.responseText);
           console.log("finished importStream", resp.responseText);
-          if (refresh && parseInt(resp.responseText, 10) > 0) {
-            location.reload();
+          if ($('li').length == 0) {
+            $('#content').append(respJson.html);
+            $('#spinner').hide();
           }
         }
       });

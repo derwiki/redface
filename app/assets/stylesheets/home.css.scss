@@ -16,6 +16,15 @@ html[xmlns] .clearfix {
   height:1%;                                                                       
 }   
 
+#spinner {
+  display: none;
+  font-family: Helvetica;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  width: 200px;
+}
+
 #content ul {
   list-style-type: none;
   font-family: Helvetica;
