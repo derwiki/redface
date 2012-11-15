@@ -2,7 +2,8 @@
   -stories.each do |story|
     %li.clearfix
       %span.votes= story.votes
-      = link_to(story.title, story.url, class: 'title clearfix')
+      .title
+        =link_to_story(story, class: 'clearfix')
       .details.clearfix
         by #{link_to_story_poster(story)}
         at #{time_ago_in_words story.created_at} ago
