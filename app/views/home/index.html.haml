@@ -1,0 +1,10 @@
+=javascript_include_tag 'index'
+#fb-login-wrapper
+  %fb:login-button{ scope: 'read_stream'}Login with Facebook
+#spinner
+  =image_tag 'spinner.gif'
+  %p Importing from Facebook, this may take a minute.
+#import_complete
+  New stories imported,
+  %a#show_new_stories{ href: '#' } update now &raquo;
+#content

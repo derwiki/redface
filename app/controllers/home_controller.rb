@@ -27,6 +27,8 @@ class HomeController < ApplicationController
       Rails.logger.info "Not importing, found story #{story.id} from #{story.created_at}"
       render text: "OK - Cached"
       return
+    else
+      Rails.logger.info 'Proceeding to hit Facebook'
     end
 
     url    = "https://graph.facebook.com/me/home?limit=200&access_token=#{access_token}"

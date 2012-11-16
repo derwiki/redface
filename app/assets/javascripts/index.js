@@ -14,6 +14,13 @@ Redface = (function() {
   }
 
   function init() {
+    $('#show_new_stories').on('click', function(e) {
+      e.preventDefault();
+      var $importComplete = $('#import_complete');
+      $('#content').empty().append($importComplete.data('stories'));
+      $importComplete.hide();
+    });
+
     var authResponse = FB.getAuthResponse();
     if (authResponse && authResponse.accessToken) {
       // already logged in with an active token
@@ -36,20 +43,16 @@ Redface = (function() {
       complete : function(resp) {
         var respJson = JSON.parse(resp.responseText);
         console.log('loadStream resp', resp);
-        if ($('li').length == 0) {
+        if ($('li').length === 0) {
+          $('#spinner').hide();
           $('#content').append(respJson.html);
         }
-        if (respJson.count == 0) {
-          // only refresh if the page is empty
-          importStream(true);
-        } else {
-          $('#spinner').hide();
-        }
+        importStream();
       }
     });
   }
 
-  function importStream(refresh) {
+  function importStream() {
     console.log('enter importStream');
     console.log('sending data: ', Redface.loginResponse);
     $.ajax({
@@ -58,10 +61,11 @@ Redface = (function() {
       dataType : 'json',
       complete  : function(resp) {
         var respJson = JSON.parse(resp.responseText);
-        console.log("finished importStream", resp.responseText);
         if ($('li').length == 0) {
           $('#content').append(respJson.html);
           $('#spinner').hide();
+        } else {
+          $('#import_complete').show().data('stories', respJson.html);
         }
       }
     });
