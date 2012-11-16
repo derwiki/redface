@@ -44,8 +44,10 @@ Redface = (function() {
         var respJson = JSON.parse(resp.responseText);
         console.log('loadStream resp', resp);
         if ($('li').length === 0) {
-          $('#spinner').hide();
           $('#content').append(respJson.html);
+        }
+        if (respJson.count > 0) {
+          $('#spinner').hide();
         }
         importStream();
       }
