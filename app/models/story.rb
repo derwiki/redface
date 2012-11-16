@@ -15,6 +15,7 @@ class Story < ActiveRecord::Base
     limit = (opts[:limit] || 50).to_i
     acts = Story.select('id, created_at, votes').
                  where('votes > 0').
+                 where(created_at: 1.day.ago..Time.now).
                  where(importer_id: opts[:importer_id]).
                  order('id DESC').limit(1000)
     page = acts.sort_by {|act| -ranking_score(act, exp)}.slice(offset, limit)
