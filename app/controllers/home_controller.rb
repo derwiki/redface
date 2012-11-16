@@ -70,14 +70,17 @@ private
         unknown_types << status_type
       end
       unless title
-        Rails.logger.info status_type
+        Rails.logger.info status_type ? status_type : story_json.inspect
         next
       end
       title = title.gsub(/\n/, ' ')[0..254]
       url   = (link || picture || "http://www.example.com")[0..254]
 
       begin
-        user = User.create! handle: user_name, email: user_fbuid
+        next if votes.zero?
+        unless user = User.where(email: user_fbuid).first
+          user = User.create! handle: user_name, email: user_fbuid
+        end
         story = Story.create! title: title, votes: votes, url: url,
                               user_id: user.id, created_at: created_at,
                               importer_id: fbuid, photo_url: picture
@@ -86,6 +89,7 @@ private
         Rails.logger.error e
       end
     end
+    Story.where('created_at < ?', 3.days.ago).delete_all
     total
   end
 
