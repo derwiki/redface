@@ -8,4 +8,8 @@ module HomeHelper
     link_to story.user.handle,
             "http://www.facebook.com/profile.php?id=#{story.user.id}"
   end
+
+  def fbuid_small_profile_image_url(fbuid)
+    "http://graph.facebook.com/#{fbuid}/picture?type=small"
+  end
 end

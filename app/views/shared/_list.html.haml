@@ -2,6 +2,8 @@
   -stories.each do |story|
     %li.clearfix
       %span.votes= story.votes
+      %span.author_image
+        %img{ src: "#{fbuid_small_profile_image_url(story.user.email)}" }
       .title
         =link_to_story(story, class: 'clearfix')
       .details.clearfix

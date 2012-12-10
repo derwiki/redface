@@ -44,6 +44,11 @@ html[xmlns] .clearfix {
       text-align: center;
     }
 
+    .author_image {
+      float: left;
+      width: 55px;
+    }
+
     .title, .details, .photo {
       margin-left: 50px;
       display: block;
