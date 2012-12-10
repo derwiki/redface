@@ -29,6 +29,7 @@ html[xmlns] .clearfix {
 #content ul {
   list-style-type: none;
   font-family: Helvetica;
+  padding-left: 0px;
 
   li {
     padding: 5px;
@@ -42,7 +43,7 @@ html[xmlns] .clearfix {
 
     .votes {
       font-weight: bold;
-      width: 50px;
+      width: 25px;
       float: left;
       text-align: center;
     }
