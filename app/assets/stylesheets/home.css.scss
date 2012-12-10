@@ -36,6 +36,9 @@ html[xmlns] .clearfix {
     a {
       text-decoration: none;
     }
+    a:hover {
+      text-decoration: underline;
+    }
 
     .votes {
       font-weight: bold;
@@ -47,9 +50,10 @@ html[xmlns] .clearfix {
     .author_image {
       float: left;
       width: 55px;
+      min-height: 60px;
     }
 
-    .title, .details, .photo {
+    .title, .details, .photo, .comments {
       margin-left: 50px;
       display: block;
     }
@@ -57,8 +61,9 @@ html[xmlns] .clearfix {
     .title {
       font-size: medium;
     }
-    .details {
+    .details, .comments {
       font-size: small;
+      margin-top: 2px;
     }
   }
 }

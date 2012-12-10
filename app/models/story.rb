@@ -1,5 +1,6 @@
 class Story < ActiveRecord::Base
-  attr_accessible :title, :url, :user_id, :votes, :created_at, :importer_id, :photo_url
+  attr_accessible :title, :url, :user_id, :votes, :created_at, :importer_id,
+                  :photo_url, :post_id, :comments
   belongs_to :user
 
   def self.ranking_score(act, exp=1.5)

@@ -46,15 +46,17 @@ private
     created_ats = Story.where(importer_id: fbuid).pluck(:created_at) # for de-duping
     unknown_types = []
     resp.fetch('data', []).each do |story_json|
+      puts story_json
       # all stories have these attributes
       created_at  = Time.zone.parse(story_json['created_time'])
       next if created_ats.include?(created_at)
       # return if we already have this timestamp recorded
 
       user_name   = story_json['from']['name']
-      user_fbuid  = story_json['from']['id']
       status_type = story_json['status_type']
-      fbid = story_json['id']
+      fbid        = story_json['id']
+      user_fbuid, post_id = fbid.split('_')
+      comments    = story_json['comments']['count']
 
       application = story_json['application']
       if status_type == 'app_created_story' && application && application['name'] == 'Spotify'
@@ -83,7 +85,8 @@ private
         end
         story = Story.create! title: title, votes: votes, url: url,
                               user_id: user.id, created_at: created_at,
-                              importer_id: fbuid, photo_url: picture
+                              importer_id: fbuid, photo_url: picture,
+                              post_id: post_id, comments: comments
         total += 1
       rescue ActiveRecord::StatementInvalid => e
         Rails.logger.error e

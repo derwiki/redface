@@ -6,9 +6,12 @@
         %img{ src: "#{fbuid_small_profile_image_url(story.user.email)}" }
       .title
         =link_to_story(story, class: 'clearfix')
-      .details.clearfix
+      .details
         by #{link_to_story_poster(story)}
         at #{time_ago_in_words story.created_at} ago
+      .comments
+        = link_to "#{story.comments} Comments", link_to_facebook_post(story)
+        = link_to "#{story.votes} Likes", link_to_facebook_post(story)
       -if story.photo_url
         .photo
           %img{ src: story.photo_url }
