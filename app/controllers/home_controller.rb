@@ -66,7 +66,7 @@ private
       elsif %w(app_created_story message mobile_status_update shared_story wall_post).include? status_type
         title   = story_json['message']
         votes   = story_json['likes'] ? story_json['likes']['count'] : 0
-        link    = story_json['link'] || story_json['actions'][0]['link']
+        link    = story_json['link'] || (story_json['actions'] && story_json['actions'][0]['link'])
         picture = story_json['picture']
       else
         unknown_types << status_type
