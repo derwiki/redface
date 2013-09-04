@@ -56,7 +56,7 @@ private
       status_type = story_json['status_type']
       fbid        = story_json['id']
       user_fbuid, post_id = fbid.split('_')
-      comments    = story_json['comments']['count']
+      comments    = story_json['comments'].try(:[], 'count')
 
       application = story_json['application']
       if status_type == 'app_created_story' && application && application['name'] == 'Spotify'
